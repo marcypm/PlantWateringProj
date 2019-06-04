@@ -37,13 +37,13 @@ void dclass::updateLCD(int mode, int moisture, int thresh, unsigned long lastWat
     float decimalNumber = (((float)lastWater / 60.0) / 60.0);
     char floatString[10];
     dtostrf(decimalNumber, 3, 1, floatString);
-    snprintf(lastWaterDisplay, "%shrs", floatString);
+    sprintf(lastWaterDisplay, "%shrs", floatString);
 
   } else { //display days
     float decimalNumber = ((((float)lastWater / 60.0) / 60.0) / 24.0);
     char floatString[20];
     dtostrf(decimalNumber, 3, 1, floatString);
-    snprintf(lastWaterDisplay, "%sdays", floatString);
+    sprintf(lastWaterDisplay, "%sdays", floatString);
   }
 
   if (prevMode != mode || prevMoisture != moisture || prevThresh != thresh || prevLastWater != lastWater) {
