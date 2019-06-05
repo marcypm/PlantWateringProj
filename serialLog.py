@@ -39,10 +39,11 @@ while 1:
             logger = setup_logger(datetime.now().strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d')+'.csv')
             currentDay = datetime.now().day
             
-        stringLine = re.split(" |\r",str(line, 'utf-8')) #convert serial data from bytes to utf-8 & split string
-        print(stringLine)
+        stringLine = re.split(" |\r",str(line,'utf-8')) #convert serial data from bytes to utf-8 & split string
+        #stringLine = re.split(" |\r",str(line.encode('utf-8'))) #python2 equivalent
+        #print(stringLine)
         if(stringLine[1] == "data:"): #only log if it is data and not a command response
             logger.info(datetime.now().strftime('%Y-%m-%d %H:%M:%S ') + stringLine[2] +' '+ stringLine[3])
-            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S ') + stringLine[2] +' '+ stringLine[3]);
+            #print(datetime.now().strftime('%Y-%m-%d %H:%M:%S ') + stringLine[2] +' '+ stringLine[3]);
             #print(line)
  
