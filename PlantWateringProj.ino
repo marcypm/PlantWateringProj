@@ -31,6 +31,7 @@ uint8_t state = POLLING;
 unsigned long wateredTimeStamp = 0; //Holds the millis time when last watered
 unsigned long wateringStart = 0;    //Used as starting timestamp of when watering starts
 unsigned long lastPolling = 0;      //Used as timestamp of last sample
+unsigned long lastloop = 0;         //Used as timestamp of last loop
 unsigned long currentMillis = 0;    //Hold current time
 unsigned long  lastWatered = 0;     //currentMillis-wateredTimeStamp
 int sensorReading = 0;              //Holds sensor reading
@@ -42,6 +43,8 @@ int avg = 1000;
 int samplingRate = startSamplingRate; //rate at which to acquire
 float threshold = startThresh;          //threshold to water at
 unsigned long wateringTime = startWateringTime; //
+
+const int loopRate = 500; //everyhalf second check for commands at least
 
 
 
@@ -60,6 +63,13 @@ void setup() {
 
 void loop() {
   currentMillis = millis();
+
+  if(timeBetween(lastLoop, currentMillis) >= loopRate){
+    lastLoop = currentMillis;
+    //TODO: Need to run the FSM at a different rate than the sampling rate
+    // the loop rate will be faster to allow for commands to be received faster than sampling rate
+    
+  }
 
   if (timeBetween(lastPolling, currentMillis) >= samplingRate) { //acquire, send data serially
     sensorReading = analogRead(plantSensor1); //from 0-1023
@@ -81,7 +91,7 @@ void loop() {
 
     char cmd[30] = "";
     getSerialCharArray(cmd);
-    Serial.println(cmd);
+
     parseCommand(cmd);//will change system variables or change FSM state
 
     //the above code will always execute every interval
@@ -173,66 +183,69 @@ unsigned long timeBetween(unsigned long pastTime, unsigned long currentTime) {
 }
 
 void parseCommand(char *command) { //dont use String class use char arrays
+    char *tok;
+    tok = strtok(command, " ");//tokenizing the command will get rid of \r\n at the end
+    Serial.println(tok);
 
-  if (strcmp(command, "default\n") == 0) {
+  if (strcmp(command, "default") == 0) {
     samplingRate = startSamplingRate;
     threshold = startThresh;
     wateringTime = startWateringTime;
     //Serial.println(command);
-  } else if (strcmp(command, "water\n") == 0) {
+  } else if (strcmp(command, "water") == 0) {
     state = WATER;
     //Serial.println(command);
-  } else if (strcmp(command, "poll\n") == 0) {
+  } else if (strcmp(command, "poll") == 0) {
     state = POLLING;
     //Serial.println(command);
-  } else if (strcmp(command, "stop\n") == 0) {
+  } else if (strcmp(command, "stop") == 0) {
     state = END;
     //Serial.println(command);
     //Serial.println("STOPPING");
-  } else if (strcmp(command, "empty\n") == 0) {
+  } else if (strcmp(command, "empty") == 0) {
     state = TANK_EMPTY;
     //Serial.println(command);
-  } else if (strcmp(command, "config\n") == 0) {
+  } else if (strcmp(command, "config") == 0) {
     state = CONFIRM_WATER;
     //Serial.println(command);
   } else {
 
-    char *firstArg;
-    firstArg = strtok(command, " ");
+    //char *firstArg;
+    //firstArg = strtok(command, " ");
 
-    if (strcmp(firstArg, "sample") == 0) {
+    if (strcmp(tok, "sample") == 0) {
       Serial.print("cmd:  ");
-      Serial.println(firstArg);
-      firstArg = strtok(NULL, " ");
+      Serial.println(tok);
+      tok = strtok(NULL, " ");
       Serial.print("arg:  ");
-      Serial.println(firstArg);
-      int newSampling = atoi(firstArg);
+      Serial.println(tok);
+      int newSampling = atoi(tok);
       if (newSampling >= 1 && newSampling <= 3600) {
         samplingRate = newSampling * 1000;
       } else {
         Serial.println("~Value needs to be between 1 & 3600 seconds");
       }
 
-    } else if (strcmp(firstArg, "thresh") == 0) {
+    } else if (strcmp(tok, "thresh") == 0) {
       Serial.print("cmd:  ");
-      Serial.println(firstArg);
-      firstArg = strtok(NULL, " ");
+      Serial.println(tok);
+      tok = strtok(NULL, " ");
       Serial.print("arg:  ");
-      Serial.println(firstArg);
-      int newThresh = atoi(firstArg);
+      Serial.println(tok);
+      int newThresh = atoi(tok);
       if (newThresh >= 1 && newThresh <= 90) {
         threshold = ((float)newThresh / 100) * 1024;
       } else {
         Serial.println("~Value needs to be between 1 & 90 %");
       }
 
-    } else if (strcmp(firstArg, "watertime") == 0) {
+    } else if (strcmp(tok, "watertime") == 0) {
       Serial.print("cmd:  ");
-      Serial.println(firstArg);
-      firstArg = strtok(NULL, " ");
+      Serial.println(tok);
+      tok = strtok(NULL, " ");
       Serial.print("arg:  ");
-      Serial.println(firstArg);
-      int newWatering = atoi(firstArg);
+      Serial.println(tok);
+      int newWatering = atoi(tok);
       if (newWatering >= 3 && newWatering <= 20) {
         wateringTime = newWatering * 1000;
       } else {
