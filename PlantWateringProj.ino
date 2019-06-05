@@ -72,15 +72,16 @@ void loop() {
     //TODO: overflow of millis?
     lastWatered = timeBetween(wateredTimeStamp, currentMillis) / 1000; //in seconds
     lastPolling = currentMillis;
-    Serial.print("reading: ");
+    Serial.print(" data: ");
     Serial.print(sensorReading);
-    Serial.print("  avg: ");
+    Serial.print(" ");
     Serial.print(avg);
-    Serial.print("  State: ");
+    Serial.print(" ");
     Serial.println(state);
 
     char cmd[30] = "";
     getSerialCharArray(cmd);
+    Serial.println(cmd);
     parseCommand(cmd);//will change system variables or change FSM state
 
     //the above code will always execute every interval
@@ -89,7 +90,7 @@ void loop() {
     switch (state) {
       case POLLING:
         {
-          Serial.println("in POLLING");
+          //Serial.println("in POLLING");
           analogWrite(pump, 0);
           lcd.updateLCD(1, moisture, (threshold / 1024) * 100, lastWatered);
           if (avg < threshold) state = WATER;
@@ -98,7 +99,7 @@ void loop() {
 
       case WATER:
         {
-          Serial.println("in WATER");
+          //Serial.println("in WATER");
           analogWrite(pump, 100);
           lcd.waterLCD(2);
           wateringStart = currentMillis;
@@ -108,7 +109,7 @@ void loop() {
 
       case WATERING:
         {
-          Serial.println("WATERING..");
+          //Serial.println("WATERING..");
           if (timeBetween(wateringStart, currentMillis) >= wateringTime) {
             state = CONFIRM_WATER;
           }
@@ -117,7 +118,7 @@ void loop() {
 
       case CONFIRM_WATER:
         {
-          Serial.println("in CONFIRM_WATER");
+          //Serial.println("in CONFIRM_WATER");
           analogWrite(pump, 0);
 
           if (avg > threshold) {
@@ -131,7 +132,7 @@ void loop() {
 
       case TANK_EMPTY:
         {
-          Serial.println("in TANK_EMPTY");
+          //Serial.println("in TANK_EMPTY");
           lcd.emptyTankLCD(3, moisture);
           if (avg > threshold) {
             wateredTimeStamp = millis();
@@ -142,7 +143,7 @@ void loop() {
 
       case JUST_POLL:
         {
-          Serial.println("in JUST_POLL");
+          //Serial.println("in JUST_POLL");
           lcd.justPollLCD(4, moisture);
           state = JUST_POLL;
         }
@@ -150,7 +151,7 @@ void loop() {
 
       case END: //enters infinite loop waiting for command to break out of it.
         {
-          Serial.println("in STOP");
+          //Serial.println("in STOP");
           analogWrite(pump, 0);
 
           while (1) {
@@ -177,23 +178,23 @@ void parseCommand(char *command) { //dont use String class use char arrays
     samplingRate = startSamplingRate;
     threshold = startThresh;
     wateringTime = startWateringTime;
-    Serial.println(command);
+    //Serial.println(command);
   } else if (strcmp(command, "water\n") == 0) {
     state = WATER;
-    Serial.println(command);
+    //Serial.println(command);
   } else if (strcmp(command, "poll\n") == 0) {
     state = POLLING;
-    Serial.println(command);
+    //Serial.println(command);
   } else if (strcmp(command, "stop\n") == 0) {
     state = END;
-    Serial.println(command);
-    Serial.println("STOPPING");
+    //Serial.println(command);
+    //Serial.println("STOPPING");
   } else if (strcmp(command, "empty\n") == 0) {
     state = TANK_EMPTY;
-    Serial.println(command);
+    //Serial.println(command);
   } else if (strcmp(command, "config\n") == 0) {
     state = CONFIRM_WATER;
-    Serial.println(command);
+    //Serial.println(command);
   } else {
 
     char *firstArg;
