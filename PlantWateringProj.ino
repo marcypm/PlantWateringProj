@@ -38,6 +38,7 @@ int sensorReading = 0;              //Holds sensor reading
 int index = 0;
 int last3[3] = {1000, 1000, 1000};
 int avg = 1000;
+float moisture = 100;
 
 //These variables can be overwritten via Serial commands
 int samplingRate = startSamplingRate; //rate at which to acquire
@@ -45,8 +46,13 @@ float threshold = startThresh;          //threshold to water at
 unsigned long wateringTime = startWateringTime; //
 
 const int loopRate = 500; //everyhalf second check for commands at least
+unsigned long lastLoop = 0;
 
 
+unsigned long timeBetween(unsigned long pastTime, unsigned long currentTime);
+int average(int *samples);
+void getSerialCharArray(char *charHolder);
+void parseCommand(char *command);
 
 void setup() {
   lcd.SETUP();
@@ -64,30 +70,27 @@ void setup() {
 void loop() {
   currentMillis = millis();
 
-  if(timeBetween(lastLoop, currentMillis) >= loopRate){
+  if (timeBetween(lastLoop, currentMillis) >= loopRate) {
     lastLoop = currentMillis;
-    //TODO: Need to run the FSM at a different rate than the sampling rate
-    // the loop rate will be faster to allow for commands to be received faster than sampling rate
-    
-  }
 
-  if (timeBetween(lastPolling, currentMillis) >= samplingRate) { //acquire, send data serially
-    sensorReading = analogRead(plantSensor1); //from 0-1023
-    last3[index++] = sensorReading;
-    index = index % 3; //inedx loops back around 0-2
-    avg = average(last3);
+    if (timeBetween(lastPolling, currentMillis) >= samplingRate) { //acquire, send data serially
+      sensorReading = analogRead(plantSensor1); //from 0-1023
+      last3[index++] = sensorReading;
+      index = index % 3; //inedx loops back around 0-2
+      avg = average(last3);
 
-    float moisture = sensorReading * (100.0 / 1023.0);
+      moisture = sensorReading * (100.0 / 1023.0);
 
-    //TODO: overflow of millis?
-    lastWatered = timeBetween(wateredTimeStamp, currentMillis) / 1000; //in seconds
-    lastPolling = currentMillis;
-    Serial.print(" data: ");
-    Serial.print(sensorReading);
-    Serial.print(" ");
-    Serial.print(avg);
-    Serial.print(" ");
-    Serial.println(state);
+      //TODO: overflow of millis?
+      lastWatered = timeBetween(wateredTimeStamp, currentMillis) / 1000; //in seconds
+      lastPolling = currentMillis;
+      Serial.print(" data: ");
+      Serial.print(sensorReading);
+      Serial.print(" ");
+      Serial.print(avg);
+      Serial.print(" ");
+      Serial.println(state);
+    }
 
     char cmd[30] = "";
     getSerialCharArray(cmd);
@@ -175,17 +178,13 @@ void loop() {
         break;
     }
   }
-
 }
 
-unsigned long timeBetween(unsigned long pastTime, unsigned long currentTime) {
-  return currentTime - pastTime; //accounts for rollover?
-}
 
 void parseCommand(char *command) { //dont use String class use char arrays
-    char *tok;
-    tok = strtok(command, " ");//tokenizing the command will get rid of \r\n at the end
-    Serial.println(tok);
+  char *tok;
+  tok = strtok(command, " ");//tokenizing the command will get rid of \r\n at the end
+  Serial.println(tok);
 
   if (strcmp(command, "default") == 0) {
     samplingRate = startSamplingRate;
@@ -253,9 +252,12 @@ void parseCommand(char *command) { //dont use String class use char arrays
       }
     }
 
-
   }
 
+}
+
+unsigned long timeBetween(unsigned long pastTime, unsigned long currentTime) {
+  return currentTime - pastTime; //accounts for rollover?
 }
 
 int average(int *samples) {
@@ -263,6 +265,6 @@ int average(int *samples) {
 }
 
 void getSerialCharArray(char *charHolder) {
-  String serialCmd = Serial.readString();//TODO: protect against entries over 30 characters
+  String serialCmd = Serial.readString();
   serialCmd.toCharArray(charHolder, 30);
 }
