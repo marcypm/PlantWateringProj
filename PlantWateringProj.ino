@@ -15,8 +15,8 @@
 
 //Defining starting values, these will be able to be overwritten when the program starts
 #define startThresh 103         //Default threshold on startup = 10%
-#define startWateringTime 6000 //Default watering time on startup
-#define startSamplingRate 1000  //Default sampling rate on startup
+#define startWateringTime 6000 //Default watering time on startup ~20s per cup
+#define startSamplingRate 8000  //Default sampling rate on startup
 
 const int plantSensor1 = A0;// sensor pins
 const int pump = 3;         // PWM pin for pump
