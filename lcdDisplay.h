@@ -7,6 +7,7 @@ class dclass
   public:
     dclass();
     void SETUP();
+    void resetLCD();
     void updateLCD(int mode, int moisture, int thresh, unsigned long lastWater);
     void waterLCD(int mode);
     void emptyTankLCD(int mode, int moisture);

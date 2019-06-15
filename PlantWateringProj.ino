@@ -15,8 +15,8 @@
 
 //Defining starting values, these will be able to be overwritten when the program starts
 #define startThresh 103         //Default threshold on startup = 10%
-#define startWateringTime 13000 //Default watering time on startup
-#define startSamplingRate 8000  //Default sampling rate on startup
+#define startWateringTime 6000 //Default watering time on startup
+#define startSamplingRate 1000  //Default sampling rate on startup
 
 const int plantSensor1 = A0;// sensor pins
 const int pump = 3;         // PWM pin for pump
@@ -74,12 +74,15 @@ void loop() {
     lastLoop = currentMillis;
 
     if (timeBetween(lastPolling, currentMillis) >= samplingRate) { //acquire, send data serially
-      sensorReading = analogRead(plantSensor1); //from 0-1023
+      sensorReading = analogRead(plantSensor1); //from 0-1023 [~300 wet, 999 dry] range 0-699
       last3[index++] = sensorReading;
       index = index % 3; //inedx loops back around 0-2
       avg = average(last3);
 
       moisture = sensorReading * (100.0 / 1023.0);
+      //value = ((sensorReading-wetreading)<0)? 0 : (sensorReading-wetreading);
+      //value = (value> 699)? 699: value;
+      //moisture = 100.0-(value * (100.0/699));
 
       //TODO: overflow of millis?
       lastWatered = timeBetween(wateredTimeStamp, currentMillis) / 1000; //in seconds
@@ -113,7 +116,7 @@ void loop() {
       case WATER:
         {
           //Serial.println("in WATER");
-          analogWrite(pump, 100);
+          analogWrite(pump, 255);
           lcd.waterLCD(2);
           wateringStart = currentMillis;
           state = WATERING;
@@ -133,7 +136,7 @@ void loop() {
         {
           //Serial.println("in CONFIRM_WATER");
           analogWrite(pump, 0);
-
+          lcd.resetLCD();
           if (avg > threshold) {
             state = POLLING;
             wateredTimeStamp = millis();
@@ -245,10 +248,10 @@ void parseCommand(char *command) { //dont use String class use char arrays
       Serial.print("arg:  ");
       Serial.println(tok);
       int newWatering = atoi(tok);
-      if (newWatering >= 3 && newWatering <= 20) {
+      if (newWatering >= 5 && newWatering <= 60) {
         wateringTime = newWatering * 1000;
       } else {
-        Serial.println("~Value needs to be between 3 & 20 seconds");
+        Serial.println("~Value needs to be between 5 & 60 seconds");
       }
     }
 

@@ -20,6 +20,11 @@ void dclass::SETUP() {
   LCD.print("Booting Up...");
 }
 
+void dclass::resetLCD() {
+  LCD.begin(16, 2); // set LCD's columns and rows
+  LCD.print("Checking Water...");
+}
+
 
 void dclass::updateLCD(int mode, int moisture, int thresh, unsigned long lastWater) {
   //convert lastWater to string
